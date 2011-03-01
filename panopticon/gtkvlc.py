@@ -27,3 +27,16 @@ class VLCSlave(gtk.DrawingArea):
             return True
         self.connect("map", handle_embed)
         self.set_size_request(width, height)
+
+    def actions(self, action):
+        if hasattr(self.player, action):
+            return getattr(self.player, action)
+        else:
+            return lambda x: None
+
+    def deferred_action(self, delay = 0, action='play', *args):
+        """Start playing in the background."""
+        from twisted.internet.task import deferLater
+        from twisted.internet import reactor
+        return deferLater(reactor, delay, self.actions(action), *args)
+
