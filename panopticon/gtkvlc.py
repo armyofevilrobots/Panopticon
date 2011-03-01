@@ -3,6 +3,7 @@ import gtk
 import sys
 
 
+# pylint: disable-msg=R0904
 class VLCSlave(gtk.DrawingArea):
     """VLCSlave provides a playback window with an underlying player
 
@@ -17,7 +18,8 @@ class VLCSlave(gtk.DrawingArea):
         gtk.DrawingArea.__init__(self)
         self.player = instance.media_player_new()
         def handle_embed(*args):
-            #Args are ignored, but left here in case.
+            """Args are ignored, but left here in case."""
+            # pylint: disable-msg=W0613
             if sys.platform == 'win32':
                 self.player.set_hwnd(self.window.handle)
             else:

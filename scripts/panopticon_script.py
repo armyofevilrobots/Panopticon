@@ -14,19 +14,26 @@ from twisted.internet import gtk2reactor # for gtk-2.0
 gtk2reactor.install()
 
 from panopticon.sshconsole import SSHFactory
-from panopticon.gtkvlc import VLCSlave
 from panopticon.mainwindow import MainWindow
 from panopticon import BANNER
 
-if __name__ == '__main__':
-    if not sys.argv[1:]:
+
+def main(argv):
+    """Just to make pylint happier..."""
+    if not argv[1:]:
         print BANNER
         print _("You must provide at least 1 movie filename")
         sys.exit(1)
     else:
         #p=MultiVideoPlayer()
-        p = MainWindow()
-        p.main(sys.argv[1:])
+        main_window = MainWindow()
+        main_window.main(argv[1:])
         from twisted.internet import reactor
-        reactor.listenTCP(5022, SSHFactory(dict(main=p)),)
+        # pylint: disable-msg=E0611
+        # pylint: disable-msg=E1101
+        reactor.listenTCP(5022, SSHFactory(dict(main=main_window)),)
         reactor.run()
+
+
+if __name__ == '__main__':
+    main(sys.argv)

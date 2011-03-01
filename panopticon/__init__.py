@@ -1,5 +1,5 @@
-import gtkvlc
-#
+"""Please see maindow, gtkvlc, and sshconsole"""
+
 BANNER = \
 """          Panopticon 2.0
               ___  ___   _  ______  ___  ___________________  _  __
