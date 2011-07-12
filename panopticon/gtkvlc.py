@@ -8,8 +8,7 @@ class VLCSlave(gtk.DrawingArea):
     """VLCSlave provides a playback window with an underlying player
 
     Its player can be controlled through the 'player' attribute, which
-    is a vlc.MediaPlayer() instance.
-    """
+    is a vlc.MediaPlayer() instance."""
     def __init__(self, instance, name, width=320, height=200):
         """Generate a new VLC container using vlc instance "instance" and
         the given name variable for later referencing. Width/Height are self
@@ -17,8 +16,11 @@ class VLCSlave(gtk.DrawingArea):
         self.wname = name
         gtk.DrawingArea.__init__(self)
         self.player = instance.media_player_new()
+
         def handle_embed(*args):
-            """Args are ignored, but left here in case."""
+            """This is a callback that handles the window being mapped to the
+            display, and sets vlc to draw to it.
+            Args are ignored, but left here in case."""
             # pylint: disable-msg=W0613
             if sys.platform == 'win32':
                 self.player.set_hwnd(self.window.handle)
@@ -33,6 +35,7 @@ class VLCSlave(gtk.DrawingArea):
             return getattr(self.player, action)
         else:
             return lambda x: None
+        print "Vouts", self.player.has_vout()
 
     def deferred_action(self, delay = 0, action='play', *args):
         """Start playing in the background."""

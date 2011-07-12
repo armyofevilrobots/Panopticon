@@ -10,6 +10,7 @@
 import gtk
 import vlc
 from panopticon.gtkvlc import VLCSlave
+from panopticon.gtkmarquee import Marquee
 
 class MainWindow:
     """Holds all of the subwindows, and keeps track of them"""
@@ -18,7 +19,10 @@ class MainWindow:
         # pylint: disable-msg=W0613
         self.window = None
         self.instance = None
+        self.scrollbox = None
         self.fullscreen = False
+        self.wrapper = None
+
 
     def on_window_key_press_event(self, window, event):
         """Handle local keypresses for window, and event, so we can do cool
@@ -42,20 +46,26 @@ class MainWindow:
         self.fullscreen = bool(event.new_window_state &
                 gtk.gdk.WINDOW_STATE_FULLSCREEN)
 
-    def main(self, slaves = list(), fullscreen = False):
+    def main(self, slaves = False, fullscreen = False):
         """The main loop of this program. I always hated how the
         main window is also the logic loop singleton. Perhaps I
         should change that? Twisted gets halfway with a different
         reactor startup."""
         # Create a single vlc.Instance()
         # to be shared by (possible) multiple players.
+        slaves = slaves or list()
         self.instance = vlc.Instance()
         self.window = gtk.Window()
         self.window.connect("key-press-event", self.on_window_key_press_event)
         self.window.connect("window-state-event", self.on_window_state_event)
-        mainbox = gtk.VBox()
+        self.wrapper = gtk.Table(5, 1, True)
+        mainbox = gtk.VBox(False)
         mainbox.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0, 0))
-        self.window.add(mainbox)
+        self.window.add(self.wrapper)
+        #self.wrapper.attach(mainbox, 0, 1, 0, 4)
+        self.wrapper.attach(mainbox, 0, 1, 0, 5) #Without the scroller
+        #self.scrollbox = Marquee("Foo message.")
+        #mainbox.connect("configure-event", self.scrollbox.on_resize)
 
         vwindows = []
         hbox = None
@@ -63,17 +73,25 @@ class MainWindow:
             if hbox is None:
                 hbox = gtk.HBox()
                 hbox.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0, 0))
+            smedia = self.instance.media_new(fname, ":sout=#duplicate{"
+                    "dst=display,dst=\"transcode{vcodec=h264,fps=30,vb=800,"
+                    "ab=64,width=512,height=384, acodec=mp3,samplerate=44100}"
+                    ":std{access=http{mime=video/x-flv},"
+                    "mux=ffmpeg{mux=flv},dst=0.0.0.0:908%d/}\"}" %
+                    len(vwindows))
             vslave = VLCSlave(self.instance, fname)
             vslave.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0, 0))
-
-            vslave.player.set_media(self.instance.media_new(fname))
+            vslave.player.set_media(smedia)
+            vslave.player.video_set_marquee_string(1,"FooBarBaz.")
+            vslave.player.video_set_marquee_int(1,1)
             hbox.add(vslave)
             vwindows.append(vslave)
-            if len(hbox.get_children()) > 1:
-                mainbox.add(hbox)
-                hbox = None
+
+
         if hbox is not None:
-            mainbox.add(hbox)
+            mainbox.pack_start(hbox)
+
+        #self.wrapper.attach(self.scrollbox, 0, 1, 4, 5)
 
         self.window.show_all()
         self.window.connect("destroy", gtk.main_quit)
@@ -82,7 +100,7 @@ class MainWindow:
             self.window.fullscreen()
 
         from twisted.internet import defer
-        from twisted.internet import reactor
+        # so that parallel runs don't assplode.
         @defer.deferredGenerator
         def _run():
             """Better than a lambda..."""
@@ -90,8 +108,9 @@ class MainWindow:
                 wfd = defer.waitForDeferred(vslave.deferred_action(1, 'play'))
                 yield wfd
                 wfd.getResult()
-        self.vwindows = vwindows
 
         # pylint: disable-msg=E0611
         # pylint: disable-msg=E1101
+        from twisted.internet import reactor
         reactor.callWhenRunning(_run)
+
