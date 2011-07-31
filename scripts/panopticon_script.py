@@ -16,10 +16,18 @@ gtk2reactor.install()
 from panopticon.sshconsole import SSHFactory
 from panopticon.mainwindow import MainWindow
 from panopticon import BANNER
+from ConfigParser import SafeConfigParser
+from optparse import OptionParser
 
 
-def main(argv):
+
+def main(args):
     """Just to make pylint happier..."""
+    parser = OptionParser()
+    parser.add_option("-c", "--config", dest = "config",
+            help = "Configuration file location.")
+    options, argv = parser.parse_args(args)
+
     if not argv[1:]:
         print BANNER
         print _("You must provide at least 1 movie filename")
@@ -27,7 +35,7 @@ def main(argv):
     else:
         #p=MultiVideoPlayer()
         main_window = MainWindow()
-        main_window.main(argv[1:])
+        main_window.main(argv[1:], options)
         from twisted.internet import reactor
         # pylint: disable-msg=E0611
         # pylint: disable-msg=E1101

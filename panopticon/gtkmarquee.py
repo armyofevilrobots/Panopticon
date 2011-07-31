@@ -12,6 +12,7 @@ import pango
 # pylint: disable-msg=R0904
 class Marquee(gtk.HBox):
     """Smooth scrolling marquee widget for pygtk 2.8ish"""
+    """P.S. This does not work. You should not use it."""
     def __init__(self, default_content="", fps=30):
         """Override to add the viewport and textholder"""
         gtk.HBox.__init__(self)

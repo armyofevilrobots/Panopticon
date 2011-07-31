@@ -74,19 +74,27 @@ class MainWindow:
             if hbox is None:
                 hbox = gtk.HBox()
                 hbox.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0, 0))
+            #smedia = self.instance.media_new(fname,
+                    #":sout=#duplicate{"
+                    #"dst=display,dst=\"transcode{vcodec=h264,fps=30,vb=1600,"
+                    #"ab=64,width=512,height=384,acodec=mp3,sfilter=marq}"
+                    #":std{access=http{mime=video/x-flv},"
+                    #"mux=ffmpeg{mux=flv},dst=0.0.0.0:908%d/}\"}" %
+                    #len(vwindows))
             smedia = self.instance.media_new(fname,
+                    "clock-jitter=0",
                     ":sout=#duplicate{"
-                    "dst=display{sfilter=marq},dst=\"transcode{vcodec=h264,fps=30,vb=800,"
-                    "ab=64,width=512,height=384, acodec=mp3,samplerate=44100,sfilter=marq}"
-                    ":std{access=http{mime=video/x-flv},"
-                    "mux=ffmpeg{mux=flv},dst=0.0.0.0:908%d/}\"}" %
-                    len(vwindows))
+                    "dst=display{sfilter=marq},dst=\"transcode{vcodec=mp2v,fps=25,vb=4000,"
+                    "scale=1,acodec=mp2a,deinterlace,ab=196,audio-sync,samplerate=44100,sfilter=marq}"
+                    ":rtp{dst=0.0.0.0,port=928%d,sdp=rtsp://0.0.0.0:918%d/test.sdp,mux=ts}" %
+                    (len(vwindows),len(vwindows)))
             vslave = VLCSlave(self.instance, fname)
             vslave.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color(0, 0, 0, 0))
             vslave.player.set_media(smedia)
             #This is a bunch of MaGiC from http://liris.cnrs.fr/advene/download/python-ctypes/doc/index.html
-            vslave.player.video_set_marquee_string(1,"FooBarBaz This is a long title... "*10)
+            vslave.player.video_set_marquee_string(1,"FooBarBaz This is a long title...")
             vslave.player.video_set_marquee_int(4,9)  #position rel bottom left
+            vslave.player.video_set_marquee_int(6,22) #size
             vslave.player.video_set_marquee_int(8,10) #x position 10
             vslave.player.video_set_marquee_int(9,10) #y position 10
             hbox.add(vslave)
